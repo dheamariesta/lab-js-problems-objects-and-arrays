@@ -18,8 +18,8 @@ var Car = function (carInfo) {
   this.customer = null;
   this.rentalDuration = 0;
 
-  var quotePrice = function(){
-    return rentalDuration * rentalPrice;
+  this.quotePrice = function(rentalDuration){
+    return rentalDuration * this.rentalPricePerDay;
   }
 
   this.reserve = function(cust, rentalDuration){
@@ -35,7 +35,7 @@ var Car = function (carInfo) {
   }
 
   this.returned = function(){
-    if (available){
+    if (this.available){
       return console.log("Sorry, this car have already been returned");
     } else {
       this.available = true;
@@ -144,7 +144,8 @@ var Vendor = function(name) {
   this.returnCar = function(customerID){
     var cust = this.getCustomer(customerID);
     if (cust){
-      cust.carRented.returned(null);
+      var carIndex = this.findCarIndex(cust.carRented.id);
+      this.cars[carIndex].returned();
       cust.carRented = null;
       console.log("Thank you for using our service");
     } else {
@@ -152,15 +153,10 @@ var Vendor = function(name) {
     }
   }
 
-  this.totalRevenue = function(){
-    /*reduce(
-      accumulator,
-      currentValue,
-      currentIndex,
-      array)
-      */
-
-    // return this.cars.reduce();
+  this.totalRevenue = function () {
+    return this.cars.reduce(function (acc, val, ind, arr) {
+      return acc += val.quotePrice(val.rentalDuration);
+    }, 0);
   }
 };
 
@@ -189,3 +185,25 @@ vendor.addCar(carA);
 console.log(vendor.availableCars());
 
 vendor.rentCar(customerA.id, 5);
+console.log(vendor.totalRevenue());
+var carB = new Car({
+  id: "002",
+  producer: "Hyundai",
+  model: "New",
+  rentalPrice: 300,
+});
+
+vendor.addCar(carB);
+console.log(vendor.availableCars());
+
+var customerB = new Customer({
+  id: "002",
+  name: "Lydia"
+});
+
+vendor.addCustomer(customerB);
+vendor.rentCar(customerB.id, 10);
+console.log(vendor.totalRevenue());
+vendor.returnCar(customerA.id);
+console.log(vendor.totalRevenue());
+vendor.returnCar(customerB.id);
